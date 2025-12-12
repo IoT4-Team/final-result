@@ -1,0 +1,2183 @@
+[
+    {
+        "id": "07df95160324a9c0",
+        "type": "tab",
+        "label": "플로우 3",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "2046496351505f49",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3600",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 820,
+        "wires": [
+            [
+                "18d4d7fc26b76af8"
+            ]
+        ]
+    },
+    {
+        "id": "18d4d7fc26b76af8",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "URL 생성 코드",
+        "func": "// 시흥시 대략적 좌표 (정확한 위치 원하면 구글맵에서 확인 필요)\nlet lat = \"37.380\";\nlet lon = \"126.803\";\nlet apiKey = \"f205def5ec0e766c4391692a0a943786\"; \n\nmsg.url = `http://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${apiKey}`;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 820,
+        "wires": [
+            [
+                "cd387c8aadd0618f"
+            ]
+        ]
+    },
+    {
+        "id": "bb0ecc83b64dd43f",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "AQI 판독 및 전역 변수 저장",
+        "func": "// 1. API 결과에서 AQI (대기질 지수) 가져오기\n// OpenWeatherMap 구조: payload -> list[0] -> main -> aqi\nlet aqi = msg.payload.list[0].main.aqi;\n\n// 2. 상태 판단 (1~2: 좋음, 3~5: 나쁨으로 가정)\nlet airStatus = \"good\";\n\nif (aqi >= 3) {\n    airStatus = \"bad\";\n}\n\n// ========================================================\n// 3. Global Variable(전역 변수) 저장 (핵심!)\n// ========================================================\n// \"outdoor_air\"라는 이름표를 붙여서 현재 공기 상태를 저장합니다.\n// 이 값은 Node-RED의 모든 노드(다른 탭 포함)에서 꺼내 쓸 수 있습니다.\nglobal.set(\"outdoor_air\", airStatus);\n\n\n// 4. 디버깅용 출력 메시지 만들기\nmsg.payload = {\n    \"AQI\": aqi,\n    \"Location\": \"Siheung\",\n    \"Status\": airStatus,\n    \"Saved_Global\": global.get(\"outdoor_air\") // 잘 저장됐나 확인\n};\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 910,
+        "y": 820,
+        "wires": [
+            [
+                "61779f70803e268b"
+            ]
+        ]
+    },
+    {
+        "id": "cd387c8aadd0618f",
+        "type": "http request",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "method": "GET",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 670,
+        "y": 820,
+        "wires": [
+            [
+                "bb0ecc83b64dd43f"
+            ]
+        ]
+    },
+    {
+        "id": "61779f70803e268b",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 1",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1140,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "480256b220999321",
+        "type": "io7 in",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "deviceId": "CO2",
+        "authentication": "5ed8a00fe0ba96d0",
+        "evt": "status",
+        "fmt": "json",
+        "qos": "0",
+        "allDevices": false,
+        "allEvents": false,
+        "allFormats": false,
+        "x": 190,
+        "y": 980,
+        "wires": [
+            [
+                "dd99ab268bb39cd3"
+            ]
+        ]
+    },
+    {
+        "id": "5128d340bbe99c4b",
+        "type": "io7 out",
+        "z": "07df95160324a9c0",
+        "authentication": "5ed8a00fe0ba96d0",
+        "name": "",
+        "deviceId": "relay",
+        "cmd": "power",
+        "fmt": "json",
+        "qos": "0",
+        "retain": "false",
+        "x": 1270,
+        "y": 860,
+        "wires": []
+    },
+    {
+        "id": "615f669f981fe355",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1400,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "b1656d7b7f27b81a",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "판단 및 제어",
+        "func": "// ====================================================\n// 모드: 최신값 즉시 반영 (평균 X) + 무조건 계속 전송\n// ====================================================\n\n// 1. 데이터 수신 (들어오는 즉시 값으로 사용)\nlet newCO2 = undefined;\nif (msg.payload && msg.payload.d && msg.payload.d.co2 !== undefined) {\n    newCO2 = Number(msg.payload.d.co2);\n}\n\n// ----------------------------------------------------\n// [수정] 평균 필터 삭제 -> 최신값 바로 대입\n// ----------------------------------------------------\n// 데이터가 끊겼을 때를 대비해 이전 값을 기억해둡니다.\nlet lastCO2 = context.get(\"lastKnownCO2\") || 400; \nlet co2 = lastCO2; // 일단 기억된 값 사용\n\n// 새 데이터가 정상적이면 바로 덮어씌웁니다.\nif (newCO2 !== undefined && !isNaN(newCO2)) {\n    co2 = newCO2; \n    context.set(\"lastKnownCO2\", co2);\n}\n// ----------------------------------------------------\n\n\n// 2. 환경 변수 및 임계값\nlet temp = global.get(\"room_temp\") || 25; \nlet rawOutdoor = global.get(\"outdoor_air\");\nlet outdoor = String(rawOutdoor || \"good\").trim().toLowerCase(); \n\nlet fireThreshold_Temp = 100; \nlet fireThreshold_CO2 = 3000; \nlet openThreshold = 1000;  \nlet closeThreshold = 800;  \n\n// 3. 판단 로직 (최신 co2 값 기준)\nlet prevRelay = context.get(\"lastRelayCmd\") || \"off\";\nlet prevServo = context.get(\"lastServoCmd\") || \"off\";\nlet prevFire = context.get(\"lastFireCmd\") || \"off\";\n\nlet relayCmd = prevRelay;\nlet servoCmd = prevServo;\nlet fireCmd = prevFire;\nlet statusMsg = `[유지] C:${co2} (최신값)`; \n\nif (temp >= fireThreshold_Temp || co2 >= fireThreshold_CO2) {\n    // [화재]\n    statusMsg = `🔥화재! (C:${co2})`;\n    fireCmd = \"on\"; servoCmd = \"on\"; relayCmd = \"off\";\n} \nelse if (co2 > openThreshold) { \n    // [환기 시작]\n    fireCmd = \"off\";\n    if (outdoor.includes(\"bad\") === false) { \n        statusMsg = \"환기ON (창문)\";\n        servoCmd = \"on\"; relayCmd = \"off\";\n    } else { \n        statusMsg = \"환기ON (청정기)\";\n        servoCmd = \"off\"; relayCmd = \"on\";\n    }\n} \nelse if (co2 < closeThreshold) { \n    // [환기 종료]\n    statusMsg = \"공기 쾌적 (OFF)\";\n    fireCmd = \"off\"; servoCmd = \"off\"; relayCmd = \"off\";\n} \nelse {\n    // [유지 구간] 800 ~ 1000\n    statusMsg = `상태 유지 중 (C:${co2})`;\n    // 날씨 악화 예외 처리\n    if (servoCmd === \"on\" && outdoor.includes(\"bad\")) {\n        servoCmd = \"off\"; relayCmd = \"on\";\n        statusMsg = \"날씨 악화로 전환\";\n    }\n}\n\n// 상태 저장\ncontext.set(\"lastRelayCmd\", relayCmd);\ncontext.set(\"lastServoCmd\", servoCmd);\ncontext.set(\"lastFireCmd\", fireCmd);\n\n\n// 4. 출력 생성 (조건 없이 무조건 전송)\nvar msgRelay = { payload: { \"d\": { \"valve\": relayCmd } }, topic: \"iot3/Grelay/cmd/power/fmt/json\" };\nvar msgServo = { payload: { \"d\": { \"fan\": servoCmd } }, topic: \"iot3/servo_motor/cmd/power/fmt/json\" };\nvar msgFire = { payload: { \"d\": { \"alarm\": fireCmd } }, topic: \"iot3/fire_alarm/cmd/power/fmt/json\" };\nvar msgStatus = { payload: statusMsg };\n\nreturn [msgRelay, msgServo, msgFire, msgStatus];",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 980,
+        "wires": [
+            [
+                "5128d340bbe99c4b"
+            ],
+            [
+                "0fd761af82dd0eac",
+                "59cff3a9839dbee6"
+            ],
+            [
+                "59cff3a9839dbee6"
+            ],
+            [
+                "615f669f981fe355"
+            ]
+        ]
+    },
+    {
+        "id": "46ca9acc7cb426c8",
+        "type": "io7 out",
+        "z": "07df95160324a9c0",
+        "authentication": "5ed8a00fe0ba96d0",
+        "name": "",
+        "deviceId": "SERVO",
+        "cmd": "power",
+        "fmt": "json",
+        "qos": "0",
+        "retain": "false",
+        "x": 1260,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "e4a08c085d73c86a",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "강제 나쁨",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 1140,
+        "wires": [
+            [
+                "49ba70036c8708fa",
+                "ea105f68c6134a40"
+            ]
+        ]
+    },
+    {
+        "id": "bcba4b13b1093a02",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "강제 좋음",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 200,
+        "y": 1200,
+        "wires": [
+            [
+                "df65f995205b4ae9"
+            ]
+        ]
+    },
+    {
+        "id": "49ba70036c8708fa",
+        "type": "change",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "outdoor_air",
+                "pt": "global",
+                "to": "bad",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 580,
+        "y": 1140,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "df65f995205b4ae9",
+        "type": "change",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "outdoor_air",
+                "pt": "global",
+                "to": "good",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 580,
+        "y": 1200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "0fd761af82dd0eac",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 3",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1420,
+        "y": 960,
+        "wires": []
+    },
+    {
+        "id": "acb0e3848c07ddb0",
+        "type": "io7 in",
+        "z": "07df95160324a9c0",
+        "name": "valve2",
+        "deviceId": "valve2",
+        "authentication": "5ed8a00fe0ba96d0",
+        "evt": "status",
+        "fmt": "json",
+        "qos": "0",
+        "allDevices": false,
+        "allEvents": false,
+        "allFormats": false,
+        "x": 210,
+        "y": 200,
+        "wires": [
+            [
+                "245bdb9ab5f6a993"
+            ]
+        ]
+    },
+    {
+        "id": "f23b2915ab6c4617",
+        "type": "io7 out",
+        "z": "07df95160324a9c0",
+        "authentication": "5ed8a00fe0ba96d0",
+        "name": "valve2",
+        "deviceId": "valve2",
+        "cmd": "power",
+        "fmt": "json",
+        "qos": "0",
+        "retain": "false",
+        "x": 1550,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "c4001fd2d1bdd73c",
+        "type": "io7 out",
+        "z": "07df95160324a9c0",
+        "authentication": "5ed8a00fe0ba96d0",
+        "name": "thermostat2",
+        "deviceId": "thermostat2",
+        "cmd": "set",
+        "fmt": "json",
+        "qos": "0",
+        "retain": "false",
+        "x": 1570,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "a093ed426bbb0a9a",
+        "type": "io7 in",
+        "z": "07df95160324a9c0",
+        "name": "thermostat2",
+        "deviceId": "thermostat2",
+        "authentication": "5ed8a00fe0ba96d0",
+        "evt": "status",
+        "fmt": "json",
+        "qos": "0",
+        "allDevices": false,
+        "allEvents": false,
+        "allFormats": false,
+        "x": 210,
+        "y": 500,
+        "wires": [
+            [
+                "9cbed41f5f450435",
+                "484f2122f0baa4ac"
+            ]
+        ]
+    },
+    {
+        "id": "245bdb9ab5f6a993",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "update ui",
+        "func": "msg.payload = msg.payload.d.valve;\nreturn msg;",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 200,
+        "wires": [
+            [
+                "c93fdf90e2a54b3b"
+            ],
+            [
+                "e26b9090fb945094"
+            ]
+        ]
+    },
+    {
+        "id": "50c61971a48fc7a7",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "valve:on/off",
+        "func": "msg.payload = {\n    \"d\" : {\n        \"valve\" : msg.payload\n    }\n}\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1250,
+        "y": 180,
+        "wires": [
+            [
+                "f23b2915ab6c4617"
+            ]
+        ]
+    },
+    {
+        "id": "6d22957958dac242",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "automate",
+        "func": "// 1. 기억 불러오기\nlet mode = context.get(\"mode\") || \"AUTO\"; \nlet current = context.get(\"lastTemp\") || 0;\nlet target = context.get(\"targetTemp\") || 24; \n\n// 2. 신호 분석\nif (msg.payload && msg.payload.mode) {\n    // (A) 목표 온도 변경 요청이 있으면 반영\n    if (msg.payload.target !== null) {\n        target = msg.payload.target;\n        context.set(\"targetTemp\", target);\n        node.warn(\">>> 목표 온도 변경됨: \" + target);\n    }\n    \n    // (B) 모드 변경 요청 처리\n    // \"KEEP\"이면 모드는 안 바꾸고 넘어감\n    if (msg.payload.mode !== \"KEEP\") {\n        mode = msg.payload.mode;\n        context.set(\"mode\", mode);\n        node.warn(\">>> 모드 변경됨: \" + mode);\n    }\n}\n// (C) 센서 데이터 처리\nelse if (msg.payload.d && msg.payload.d.temperature !== undefined) {\n    current = msg.payload.d.temperature;\n    context.set(\"lastTemp\", current);\n}\n// (D) 슬라이더 조작\nelse if (typeof msg.payload === \"number\") {\n    target = msg.payload;\n    context.set(\"targetTemp\", target);\n}\n\n// 3. 제어 로직\nlet command = null;\n\nif (mode === \"HEAT\") {\n    node.send([{ payload: \"AC_OFF\" }, null]);\n    command = \"HEAT_ON\";\n}\nelse if (mode === \"COOL\") {\n    node.send([{ payload: \"HEAT_OFF\" }, null]);\n    command = \"AC_ON\";\n}\nelse if (mode === \"OFF\") {\n    node.send([{ payload: \"AC_OFF\" }, null]);\n    node.send([{ payload: \"HEAT_OFF\" }, null]);\n    return null;\n}\nelse if (mode === \"AUTO\") {\n    if (current >= target) {\n        node.send([{ payload: \"HEAT_OFF\" }, null]);\n        command = \"AC_ON\"; \n    }\n    else if (current <= target - 2) {\n        node.send([{ payload: \"AC_OFF\" }, null]);\n        command = \"HEAT_ON\";\n    }\n    else {\n        node.send([{ payload: \"AC_OFF\" }, null]);\n        node.send([{ payload: \"HEAT_OFF\" }, null]);\n        return [null, { payload: target }];\n    }\n}\n\n// 4. 최종 전송 (밸브 명령 & 슬라이더 업데이트)\nif (command) {\n    return [ { payload: command }, { payload: target } ];\n}\nreturn null;",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1260,
+        "y": 360,
+        "wires": [
+            [
+                "f23b2915ab6c4617",
+                "1b1ca90c2a1691cd"
+            ],
+            [
+                "598aa032887abeaa"
+            ]
+        ]
+    },
+    {
+        "id": "9cbed41f5f450435",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "update ui 2",
+        "func": "let target = {\n    payload : msg.payload.d.target\n}\nlet temperature = {\n    payload : msg.payload.d.temperature\n}\nreturn [target, temperature];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 500,
+        "wires": [
+            [
+                "598aa032887abeaa"
+            ],
+            [
+                "787097a022c05692"
+            ]
+        ]
+    },
+    {
+        "id": "8ad189999e8cda19",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "target",
+        "func": "msg.payload = {\n    \"d\" : {\n        \"target\" : msg.payload\n    }\n}\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1270,
+        "y": 460,
+        "wires": [
+            [
+                "c4001fd2d1bdd73c"
+            ]
+        ]
+    },
+    {
+        "id": "c93fdf90e2a54b3b",
+        "type": "ui-switch",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "label": "Heating",
+        "group": "d50a94dd912eaf71",
+        "order": 2,
+        "width": 1,
+        "height": 0,
+        "passthru": false,
+        "decouple": true,
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-left",
+        "clickableArea": "switch",
+        "onvalue": "HEAT",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "off",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "x": 820,
+        "y": 180,
+        "wires": [
+            [
+                "50c61971a48fc7a7"
+            ]
+        ]
+    },
+    {
+        "id": "787097a022c05692",
+        "type": "ui-gauge",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "group": "d50a94dd912eaf71",
+        "order": 1,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 4,
+        "height": 4,
+        "gtype": "gauge-half",
+        "gstyle": "needle",
+        "title": "Temperature",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "℃",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "from": "0",
+                "color": "#5cd65c",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "22",
+                "color": "#0056d6",
+                "text": "",
+                "textType": "label"
+            },
+            {
+                "from": "32",
+                "color": "#ea5353",
+                "text": "",
+                "textType": "label"
+            }
+        ],
+        "min": 0,
+        "max": "50",
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "x": 710,
+        "y": 520,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "598aa032887abeaa",
+        "type": "ui-slider",
+        "z": "07df95160324a9c0",
+        "group": "d50a94dd912eaf71",
+        "name": "",
+        "label": "Target Temp",
+        "tooltip": "",
+        "order": 3,
+        "width": 3,
+        "height": 0,
+        "passthru": false,
+        "outs": "end",
+        "topic": "topic",
+        "topicType": "msg",
+        "thumbLabel": "true",
+        "showTicks": "always",
+        "min": "10",
+        "max": "60",
+        "step": 1,
+        "className": "",
+        "iconPrepend": "",
+        "iconAppend": "",
+        "color": "",
+        "colorTrack": "",
+        "colorThumb": "",
+        "showTextField": true,
+        "x": 730,
+        "y": 460,
+        "wires": [
+            [
+                "8ad189999e8cda19",
+                "6d22957958dac242"
+            ]
+        ]
+    },
+    {
+        "id": "484f2122f0baa4ac",
+        "type": "gate",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "controlTopic": "control",
+        "defaultState": "open",
+        "openCmd": "open",
+        "closeCmd": "close",
+        "toggleCmd": "toggle",
+        "defaultCmd": "default",
+        "statusCmd": "status",
+        "persist": false,
+        "storeName": "memory",
+        "x": 470,
+        "y": 360,
+        "wires": [
+            [
+                "aeb82a414a2aa074"
+            ]
+        ]
+    },
+    {
+        "id": "91c158ee3bf1e6ed",
+        "type": "link in",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "links": [
+            "c28abadae15acdc9"
+        ],
+        "x": 225,
+        "y": 360,
+        "wires": [
+            [
+                "484f2122f0baa4ac"
+            ]
+        ]
+    },
+    {
+        "id": "4a5bbef4fa90820d",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "parsing",
+        "func": "// 1. 명령어와 숫자를 분리합니다.\n// 예: \"/set 26\" -> cmd=\"/set\", val=26\nvar parts = msg.payload.content.trim().split(/\\s+/);\nvar cmd = parts[0];\nvar val = null;\n\nif (parts.length > 1) {\n    val = parseFloat(parts[1]);\n}\n\n// 2. 명령어 해석\nvar mode = null;\n\nif (cmd === \"/heat\") mode = \"HEAT\";\nelse if (cmd === \"/cool\") mode = \"COOL\";\nelse if (cmd === \"/off\") mode = \"OFF\";\nelse if (cmd === \"/auto\") mode = \"AUTO\";\nelse if (cmd === \"/set\") mode = \"KEEP\"; // ★ 핵심: \"모드 유지(KEEP)\"라는 신호\n\n// 3. 결과 전송\nif (mode) {\n    msg.payload = { \n        mode: mode, \n        target: val \n    };\n    return msg;\n}\n\nreturn null;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 580,
+        "wires": [
+            [
+                "4a7b7ae2dc28c9c5",
+                "6d22957958dac242"
+            ]
+        ]
+    },
+    {
+        "id": "4a7b7ae2dc28c9c5",
+        "type": "switch",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "property": "payload",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "hask",
+                "v": "temp",
+                "vt": "str"
+            },
+            {
+                "t": "hask",
+                "v": "auto",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 810,
+        "y": 580,
+        "wires": [
+            [
+                "23de11c061f58951"
+            ],
+            [
+                "2e125c95b1addbe5"
+            ]
+        ]
+    },
+    {
+        "id": "23de11c061f58951",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "temp",
+        "func": "if (!msg.payload.temp) return null;\n\nmsg.payload =  msg.payload.temp\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 990,
+        "y": 520,
+        "wires": [
+            [
+                "8ad189999e8cda19"
+            ]
+        ]
+    },
+    {
+        "id": "2e125c95b1addbe5",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "cmdMap",
+        "func": "if (!msg.payload.auto) return null;\n\nconst cmdMap = {'on':'open', 'true':'open', 'off':'close','false':'close'};\n\nif (cmdMap[msg.payload.auto] === undefined) {\n    return null;\n    \n}\nmsg.payload = cmdMap[msg.payload.auto];\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 580,
+        "wires": [
+            [
+                "f2bac76ba772ba3b"
+            ]
+        ]
+    },
+    {
+        "id": "f2bac76ba772ba3b",
+        "type": "ui-switch",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "label": "Enable Automation",
+        "group": "d50a94dd912eaf71",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": true,
+        "decouple": false,
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-spread",
+        "clickableArea": "switch",
+        "onvalue": "open",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "close",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "x": 1250,
+        "y": 580,
+        "wires": [
+            [
+                "3f7c7b5e67bca2b7"
+            ]
+        ]
+    },
+    {
+        "id": "3f7c7b5e67bca2b7",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "auto:on/off",
+        "func": "msg.topic = 'control';\nflow.set('enableAuto', msg.payload);\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1450,
+        "y": 580,
+        "wires": [
+            [
+                "c28abadae15acdc9"
+            ]
+        ]
+    },
+    {
+        "id": "c28abadae15acdc9",
+        "type": "link out",
+        "z": "07df95160324a9c0",
+        "name": "auto_in",
+        "mode": "link",
+        "links": [
+            "91c158ee3bf1e6ed"
+        ],
+        "x": 1615,
+        "y": 580,
+        "wires": []
+    },
+    {
+        "id": "a7302df560fab90a",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "init Auto",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 220,
+        "y": 660,
+        "wires": [
+            [
+                "90a3507f87aa86ac"
+            ]
+        ]
+    },
+    {
+        "id": "90a3507f87aa86ac",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "restore Auto setting",
+        "func": "msg.payload = flow.get('enableAuto') || 'open';\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 790,
+        "y": 660,
+        "wires": [
+            [
+                "f2bac76ba772ba3b"
+            ]
+        ]
+    },
+    {
+        "id": "c0ebe3984f9d3102",
+        "type": "telegram receiver",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "bot": "083b1f15b917ae21",
+        "saveDataDir": "",
+        "filterCommands": false,
+        "hasinput": false,
+        "inputs": 0,
+        "handleallupdates": false,
+        "x": 230,
+        "y": 580,
+        "wires": [
+            [
+                "4a5bbef4fa90820d"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "e26b9090fb945094",
+        "type": "ui-switch",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "label": "Cooling",
+        "group": "d50a94dd912eaf71",
+        "order": 2,
+        "width": 1,
+        "height": 0,
+        "passthru": false,
+        "decouple": true,
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-left",
+        "clickableArea": "switch",
+        "onvalue": "COOL",
+        "onvalueType": "str",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "off",
+        "offvalueType": "str",
+        "officon": "",
+        "offcolor": "",
+        "x": 820,
+        "y": 240,
+        "wires": [
+            [
+                "50c61971a48fc7a7"
+            ]
+        ]
+    },
+    {
+        "id": "1b1ca90c2a1691cd",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "UI분배",
+        "func": "// automate가 내린 최종 결정(AC_ON, HEAT_ON 등)을 확인\nvar cmd = msg.payload; \n\n// 스위치 상태 초기화\nvar heat_sw = false;\nvar cool_sw = false;\n\n// 명령에 따라 스위치 상태 결정\nif (cmd === \"HEAT_ON\") {\n    heat_sw = true;  // 히터 스위치만 켬\n} else if (cmd === \"AC_ON\") {\n    cool_sw = true;  // 에어컨 스위치만 켬\n}\n// 그 외(OFF)는 둘 다 false\n\n// 메시지 두 개를 동시에 내보냄 (배열 사용)\n// [첫번째 출구: Heating, 두번째 출구: Cooling]\nreturn [ {payload: heat_sw}, {payload: cool_sw} ];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 350,
+        "y": 280,
+        "wires": [
+            [
+                "c93fdf90e2a54b3b"
+            ],
+            [
+                "e26b9090fb945094"
+            ]
+        ]
+    },
+    {
+        "id": "4a1a0ac06df43c14",
+        "type": "addEventToCalendar",
+        "z": "07df95160324a9c0",
+        "google": "",
+        "calendarId2": "998352c588a28b051d10421a92e8907cc08c7a4345234fea4728daf9a43e0c34@group.calendar.google.com",
+        "timezone": "+0",
+        "conference": false,
+        "tittle": "",
+        "description": "",
+        "location": "",
+        "time": "12/10/2025 12:00 AM - 12/10/2025 11:59 PM",
+        "attend": "",
+        "email1": "",
+        "name1": "",
+        "email2": "",
+        "name2": "",
+        "email3": "",
+        "name3": "",
+        "email4": "",
+        "name4": "",
+        "email5": "",
+        "name5": "",
+        "x": 630,
+        "y": 1280,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "e639ee222e43f774",
+        "type": "telegram command",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "command": "/reserve",
+        "description": "",
+        "registercommand": false,
+        "language": "",
+        "scope": "default",
+        "bot": "083b1f15b917ae21",
+        "strict": false,
+        "hasresponse": true,
+        "useregex": false,
+        "removeregexcommand": false,
+        "outputs": 2,
+        "x": 180,
+        "y": 1280,
+        "wires": [
+            [
+                "33b4354fa1a1ebb6",
+                "d945d554fea5a1a7"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "33b4354fa1a1ebb6",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "reservatinig pasing",
+        "func": "// 예: msg.content = \"25-12-13 13-30 test\"\nlet text = msg.payload.content;\nif (!text) return null;\n\nlet parts = text.trim().split(' ');\nif (parts.length < 3) return null;\n\nlet dateStr = parts[0]; // \"25-12-13\"\nlet timeStr = parts[1]; // \"13-30\"\nlet title = parts.slice(2).join(' ');\n\nlet [yy, mm, dd] = dateStr.split('-').map(Number);\nlet [hh, min] = timeStr.split('-').map(Number);\n\n// 시작 / 종료 시간 계산 (1시간 더하기)\nlet hhEnd = hh + 1;\nif (hhEnd >= 24) hhEnd -= 24;\n\nlet pad = n => n.toString().padStart(2, '0');\n\n// 필수 필드만 상위 msg에 할당\nmsg.title = title;\nmsg.start = `20${yy}-${pad(mm)}-${pad(dd)} ${pad(hh)}:${pad(min)}:00`;\nmsg.end = `20${yy}-${pad(mm)}-${pad(dd)} ${pad(hhEnd)}:${pad(min)}:00`;\nmsg.timezone = \"+9\";      // 요청대로 숫자 offset\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 1280,
+        "wires": [
+            [
+                "4a1a0ac06df43c14"
+            ]
+        ]
+    },
+    {
+        "id": "a5a16d27e617c70c",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "today 10분전 시스템",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "iso",
+        "payloadType": "date",
+        "x": 630,
+        "y": 1620,
+        "wires": [
+            [
+                "828dbe6416554ce3"
+            ]
+        ]
+    },
+    {
+        "id": "828dbe6416554ce3",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "function 1",
+        "func": "// msg.payload가 ISO 8601 문자열이라고 가정\nlet iso = msg.payload; // ex: \"2025-12-11T03:01:54.968Z\"\n\n// Date 객체로 변환\nlet date = new Date(iso);\n\n// start = 받은 시각 기준 10분 후\nlet startDate = new Date(date.getTime() + 10 * 60 * 1000); // 10분 = 600000ms\n\n// end = start 기준 1시간 후\nlet endDate = new Date(startDate.getTime() + 60 * 60 * 1000);\n\n// 2자리 숫자 맞춤\nconst pad = n => n.toString().padStart(2, '0');\n\n// 로컬 시간 기준 \"YYYY-MM-DD HH:MM\" 변환\nlet start = `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}-${pad(startDate.getDate())} ${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`;\nlet end = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())} ${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`;\n\n// msg.payload에 저장\nmsg.payload = {\n    start: start,\n    end: end\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 1620,
+        "wires": [
+            [
+                "fca9195c3ea18248"
+            ]
+        ]
+    },
+    {
+        "id": "976d42be91220a92",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "25-12-13",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "{\"timemin\":\"2025-12-13 00:00:00\",\"timemax\":\"2025-12-14 00:00:00\"}",
+        "payloadType": "json",
+        "x": 340,
+        "y": 1620,
+        "wires": [
+            [
+                "e31d274d957cce49"
+            ]
+        ]
+    },
+    {
+        "id": "a65f13364d8382ed",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "end 10분전 시스템",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "iso",
+        "payloadType": "date",
+        "x": 630,
+        "y": 1660,
+        "wires": [
+            [
+                "f1fd31fc1b86cd65"
+            ]
+        ]
+    },
+    {
+        "id": "f1fd31fc1b86cd65",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "function 2",
+        "func": "// msg.payload가 ISO 8601 문자열이라고 가정\nlet iso = msg.payload; // ex: \"2025-12-11T03:01:54.968Z\"\nif (!iso) return null;\n\n// Date 객체로 변환\nlet date = new Date(iso);                  // 받은 시각\nlet endDate = new Date(date.getTime() + 10 * 60 * 1000); // date + 10분\nlet startDate = new Date(endDate.getTime() - 60 * 60 * 1000); // end - 1시간\n\n// 2자리 숫자 맞춤\nconst pad = n => n.toString().padStart(2, '0');\n\n// 로컬 시간 기준 \"YYYY-MM-DD HH:MM\" 변환\nlet start = `${startDate.getFullYear()}-${pad(startDate.getMonth() + 1)}-${pad(startDate.getDate())} ${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`;\nlet end = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())} ${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`;\n\n// msg.payload에 저장\nmsg.payload = {\n    start: start,\n    end: end\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 1660,
+        "wires": [
+            [
+                "11c872ea1e664236"
+            ]
+        ]
+    },
+    {
+        "id": "06dc5eb69e108529",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "end 시스템",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "iso",
+        "payloadType": "date",
+        "x": 600,
+        "y": 1700,
+        "wires": [
+            [
+                "e06c529bb91f71e3"
+            ]
+        ]
+    },
+    {
+        "id": "e06c529bb91f71e3",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "function 3",
+        "func": "// msg.payload가 ISO 8601 문자열이라고 가정\nlet iso = msg.payload; // ex: \"2025-12-11T03:01:54.968Z\"\nif (!iso) return null;\n\n// Date 객체로 변환\nlet date = new Date(iso);\n\n// 2자리 숫자 맞춤\nconst pad = n => n.toString().padStart(2, '0');\n\n// 로컬 시간 기준 \"YYYY-MM-DD HH:MM\" 변환\nlet end = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;\n\n// msg.payload에 end만 저장\nmsg.payload = { end: end };\n\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 1700,
+        "wires": [
+            [
+                "69d365dd056b5e26"
+            ]
+        ]
+    },
+    {
+        "id": "59595e6d039a225b",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "findtime pasing",
+        "func": "// msg.payload가 ISO 8601 문자열이라고 가정 (예: \"2025-12-11T12:34:56.789Z\")\nlet iso = msg.payload;\nif (!iso) return null;\n\n// Date 객체로 변환\nlet date = new Date(iso);\n\n// 연,월,일 추출\nlet yy = date.getFullYear() % 100;\nlet mm = date.getMonth() + 1;\nlet dd = date.getDate();\n\nconst pad = n => n.toString().padStart(2, '0');\n\n// 오늘 00:00:00\nlet startStr = `20${pad(yy)}-${pad(mm)}-${pad(dd)} 00:00:00`;\n\n// 내일 00:00:00\nlet endDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1);\nlet endStr = `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())} 00:00:00`;\n\n// ★★ Google Calendar가 요구하는 필드명으로 탑재 ★★\nmsg.payload = {\n    timemin: startStr,\n    timemax: endStr\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 1400,
+        "wires": [
+            [
+                "e31d274d957cce49"
+            ]
+        ]
+    },
+    {
+        "id": "e31d274d957cce49",
+        "type": "getEventFromCalendar",
+        "z": "07df95160324a9c0",
+        "google": "",
+        "calendarId": "998352c588a28b051d10421a92e8907cc08c7a4345234fea4728daf9a43e0c34@group.calendar.google.com",
+        "time": "12/13/2025 12:00 AM - 12/13/2025 11:59 PM",
+        "x": 660,
+        "y": 1400,
+        "wires": [
+            [
+                "48a142186b97c97c",
+                "5bb4a127099204ad"
+            ]
+        ]
+    },
+    {
+        "id": "48a142186b97c97c",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "get event-start",
+        "func": "// msg.payload에 캘린더 이벤트 배열이 들어왔다고 가정\nlet events = msg.payload;\nif (!events || events.length < 2) return null;\n\n// 두 번째 요소가 실제 이벤트\nlet event = events[1];\n\n// 날짜 문자열 가져오기\nlet start = event.StartDate; // ex) 2025/12/13 13:30\nlet end = event.EndDate;\n\n// ISO 형식으로 바꾸기 위해 \"/\" → \"-\" 치환\nstart = start.replace(/\\//g, \"-\");\nend = end.replace(/\\//g, \"-\")\n\nlet msgF = {};\nlet msgS = {};\n// msg.payload를 start/end로 축소\nmsgF.payload = {\n    start: start\n};\nmsgS.payload = {\n    end: end\n};\nreturn [msgF,msgS];\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 1400,
+        "wires": [
+            [
+                "fca9195c3ea18248"
+            ],
+            [
+                "11c872ea1e664236",
+                "69d365dd056b5e26"
+            ]
+        ]
+    },
+    {
+        "id": "fca9195c3ea18248",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "start before 10min",
+        "func": "// msg.payload.start 존재 가정\nlet startStr = msg.payload.start;\nif (!startStr) return [null, null]; // start 없으면 둘 다 null\n\n// Date 객체 변환\nlet eventStart = new Date(startStr.replace(' ', 'T'));\nlet now = new Date();\nlet alertTime = new Date(eventStart.getTime() - 10 * 60 * 1000); // 10분 전\n\nlet msgFirst = null;\nlet msgSecond = null;\n\n// 알림 조건\nif (now >= alertTime && now < eventStart) {\n    // 첫 출력: 현재 일정 정보\n    msgFirst = { payload: { start: startStr } };\n\n    // 두 번째 출력: \"open\" 신호를 status로\n    msgSecond = { payload: { status: 'open' } };\n}\n\n// 두 출력 반환\nreturn [msgFirst, msgSecond];\n",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1090,
+        "y": 1400,
+        "wires": [
+            [
+                "7ce657c8db723a6d"
+            ],
+            [
+                "f1bb71e01703388e"
+            ]
+        ]
+    },
+    {
+        "id": "ea0da5babaaa7b2f",
+        "type": "inject",
+        "z": "07df95160324a9c0",
+        "name": "send time 10min",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "600",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 1400,
+        "wires": [
+            [
+                "59595e6d039a225b",
+                "307023d73f0f7779"
+            ]
+        ]
+    },
+    {
+        "id": "11c872ea1e664236",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "end before 10 min",
+        "func": "// msg.payload.end 존재 가정\nlet endStr = msg.payload.end;\nif (!endStr) return null;\n\n// 끝나는 10분 전 알림 조건\nlet eventEnd = new Date(endStr.replace(' ', 'T'));\nlet now = new Date();\nlet alertTime = new Date(eventEnd.getTime() - 10 * 60 * 1000);\n\nif (now >= alertTime && now < eventEnd) {\n    // payload에 end만 담아 보내기\n    msg = { payload: { end: endStr } };\n    return msg;\n}\n\nreturn null; // 알림 조건 안 맞으면 아무것도 안 보냄\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1090,
+        "y": 1440,
+        "wires": [
+            [
+                "d561988bf22f8595"
+            ]
+        ]
+    },
+    {
+        "id": "69d365dd056b5e26",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "end time",
+        "func": "// msg.payload.end에 종료 시각 문자열이 들어있다고 가정\nlet endStr = msg.payload.end;\nif (!endStr) return null;\n\n// 현재 시각 생성\nlet now = new Date();\n\n// 2자리 숫자 맞춤 함수\nconst pad = n => n.toString().padStart(2, '0');\n\n// 현재 시각을 \"YYYY-MM-DD HH:MM\" 문자열로 변환\nlet nowStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;\n\n// 종료 시각 문자열 그대로 사용\nlet endStrFormatted = endStr;\n\n// 종료 시각 도달 여부 확인\nlet reached = nowStr === endStrFormatted;\n\n// 종료 시각 도달 시 msg.payload.status에 'off' 저장, 아니면 null\nif (reached) {\n    msg.payload = { status: 'close' };\n} else {\n    msg.payload = null;\n}\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 1480,
+        "wires": [
+            [
+                "f1bb71e01703388e"
+            ]
+        ]
+    },
+    {
+        "id": "f1bb71e01703388e",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "gate on off",
+        "func": "// 입력 메시지에서 status 확인\nif (msg.payload && msg.payload.status) {\n    // Gate 상태 제어용 메시지 만들기\n    let controlMsg = {\n        topic: 'control',            // Gate 노드에서 상태 제어용 토픽\n        payload: msg.payload.status  // 'open' 또는 'off'\n    };\n    return controlMsg;               // Gate 노드로 전달\n}\n\n// 상태 정보가 없는 메시지는 통과시키지 않음\nreturn null;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1310,
+        "y": 1480,
+        "wires": [
+            [
+                "e69b7ef2467fbef4",
+                "f628d9a13dcab72e",
+                "da69c43e0ce61d24",
+                "4f2cbc664879ce61"
+            ]
+        ]
+    },
+    {
+        "id": "7ce657c8db723a6d",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "send message start alter",
+        "func": "// msg.payload.start 존재 가정\nlet startStr = msg.payload && msg.payload.start;\nif (!startStr) return null;\n\n// 텔레그램 메시지 구성\nmsg.payload = {\n    chatId: '8347713235',\n    type: 'message',\n    content: `회의 10분 전: ${startStr}`\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1350,
+        "y": 1400,
+        "wires": [
+            [
+                "1fb950f2f43e88d1"
+            ]
+        ]
+    },
+    {
+        "id": "1fb950f2f43e88d1",
+        "type": "telegram sender",
+        "z": "07df95160324a9c0",
+        "name": "send start alter",
+        "bot": "083b1f15b917ae21",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 1600,
+        "y": 1400,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d561988bf22f8595",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "end message send",
+        "func": "// msg.payload.start 존재 가정\nlet endStr = msg.payload && msg.payload.end;\nif (!endStr) return null;\n\n// 텔레그램 메시지 구성\nmsg.payload = {\n    chatId: '8347713235',\n    type: 'message',\n    content: `회의 종료 10분 전: ${endStr}`\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1330,
+        "y": 1440,
+        "wires": [
+            [
+                "66af7d9630d2acd5"
+            ]
+        ]
+    },
+    {
+        "id": "66af7d9630d2acd5",
+        "type": "telegram sender",
+        "z": "07df95160324a9c0",
+        "name": "send end alter",
+        "bot": "083b1f15b917ae21",
+        "haserroroutput": false,
+        "outputs": 1,
+        "x": 1600,
+        "y": 1460,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "307023d73f0f7779",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 12",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 660,
+        "y": 1460,
+        "wires": []
+    },
+    {
+        "id": "d945d554fea5a1a7",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 1340,
+        "wires": []
+    },
+    {
+        "id": "aeb82a414a2aa074",
+        "type": "gate",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "controlTopic": "control",
+        "defaultState": "open",
+        "openCmd": "open",
+        "closeCmd": "close",
+        "toggleCmd": "toggle",
+        "defaultCmd": "default",
+        "statusCmd": "status",
+        "persist": false,
+        "storeName": "memory",
+        "x": 930,
+        "y": 360,
+        "wires": [
+            [
+                "6d22957958dac242"
+            ]
+        ]
+    },
+    {
+        "id": "e69b7ef2467fbef4",
+        "type": "link out",
+        "z": "07df95160324a9c0",
+        "name": "link out 2",
+        "mode": "link",
+        "links": [
+            "5ae7b418dec12064"
+        ],
+        "x": 1545,
+        "y": 1520,
+        "wires": []
+    },
+    {
+        "id": "5ae7b418dec12064",
+        "type": "link in",
+        "z": "07df95160324a9c0",
+        "name": "link in 2",
+        "links": [
+            "e69b7ef2467fbef4"
+        ],
+        "x": 645,
+        "y": 400,
+        "wires": [
+            [
+                "aeb82a414a2aa074"
+            ]
+        ]
+    },
+    {
+        "id": "8e39911c0d5f6908",
+        "type": "link in",
+        "z": "07df95160324a9c0",
+        "name": "link in 1",
+        "links": [
+            "f628d9a13dcab72e"
+        ],
+        "x": 155,
+        "y": 1040,
+        "wires": [
+            [
+                "dd99ab268bb39cd3"
+            ]
+        ]
+    },
+    {
+        "id": "dd99ab268bb39cd3",
+        "type": "gate",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "controlTopic": "control",
+        "defaultState": "open",
+        "openCmd": "open",
+        "closeCmd": "close",
+        "toggleCmd": "toggle",
+        "defaultCmd": "default",
+        "statusCmd": "status",
+        "persist": false,
+        "storeName": "memory",
+        "x": 410,
+        "y": 980,
+        "wires": [
+            [
+                "b1656d7b7f27b81a"
+            ]
+        ]
+    },
+    {
+        "id": "f628d9a13dcab72e",
+        "type": "link out",
+        "z": "07df95160324a9c0",
+        "name": "link out 3",
+        "mode": "link",
+        "links": [
+            "8e39911c0d5f6908"
+        ],
+        "x": 1545,
+        "y": 1580,
+        "wires": []
+    },
+    {
+        "id": "5ec8644d7ceb22ed",
+        "type": "io7 in",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "deviceId": "neo2",
+        "authentication": "5ed8a00fe0ba96d0",
+        "evt": "status",
+        "fmt": "json",
+        "qos": "0",
+        "allDevices": false,
+        "allEvents": false,
+        "allFormats": false,
+        "x": 290,
+        "y": 1960,
+        "wires": [
+            [
+                "1a41330689abc9cb",
+                "f97c7d2d88c0de93"
+            ]
+        ]
+    },
+    {
+        "id": "080dde7e0aabb162",
+        "type": "io7 out",
+        "z": "07df95160324a9c0",
+        "authentication": "5ed8a00fe0ba96d0",
+        "name": "",
+        "deviceId": "neo2",
+        "cmd": "",
+        "fmt": "json",
+        "qos": "0",
+        "retain": "false",
+        "x": 990,
+        "y": 1960,
+        "wires": []
+    },
+    {
+        "id": "1a41330689abc9cb",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "function 9",
+        "func": "msg.payload = msg.payload.d.neo;\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 1960,
+        "wires": [
+            [
+                "5ac51c58db462589"
+            ]
+        ]
+    },
+    {
+        "id": "095cb1c4df15bcf1",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "function 10",
+        "func": "msg.payload = {\n    \"d\": {\n        \"value\": msg.payload\n    }\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 810,
+        "y": 1960,
+        "wires": [
+            [
+                "080dde7e0aabb162"
+            ]
+        ]
+    },
+    {
+        "id": "1692c18f2f1fcddf",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "function 11",
+        "func": "if (msg.payload.d.button !== 'pushed') {\n    return;\n}\n\nmsg.payload = {\n    d: {\n        \"neo\": \"toggle\"\n    }\n}\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 810,
+        "y": 2060,
+        "wires": [
+            [
+                "080dde7e0aabb162"
+            ]
+        ]
+    },
+    {
+        "id": "58da2fea0b470ab8",
+        "type": "io7 in",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "deviceId": "button1",
+        "authentication": "5ed8a00fe0ba96d0",
+        "evt": "status",
+        "fmt": "json",
+        "qos": "0",
+        "allDevices": false,
+        "allEvents": false,
+        "allFormats": false,
+        "x": 290,
+        "y": 2060,
+        "wires": [
+            [
+                "40fcb4d49ecb1b56",
+                "6e6d3300e3879a71"
+            ]
+        ]
+    },
+    {
+        "id": "4f2cbc664879ce61",
+        "type": "gate",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "controlTopic": "control",
+        "defaultState": "closed",
+        "openCmd": "open",
+        "closeCmd": "close",
+        "toggleCmd": "toggle",
+        "defaultCmd": "default",
+        "statusCmd": "status",
+        "persist": false,
+        "storeName": "memory",
+        "x": 1570,
+        "y": 1840,
+        "wires": [
+            [
+                "593852f0fc20e3c2"
+            ]
+        ]
+    },
+    {
+        "id": "d8791c534ac09caa",
+        "type": "io7 in",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "deviceId": "pir1",
+        "authentication": "5ed8a00fe0ba96d0",
+        "evt": "status",
+        "fmt": "json",
+        "qos": "0",
+        "allDevices": false,
+        "allEvents": false,
+        "allFormats": false,
+        "x": 1370,
+        "y": 1860,
+        "wires": [
+            [
+                "4f2cbc664879ce61",
+                "7d1b8bab0cf3ae21"
+            ]
+        ]
+    },
+    {
+        "id": "2f1af8e4a71f9f05",
+        "type": "io7 out",
+        "z": "07df95160324a9c0",
+        "authentication": "5ed8a00fe0ba96d0",
+        "name": "",
+        "deviceId": "surbo1",
+        "cmd": "power",
+        "fmt": "json",
+        "qos": "0",
+        "retain": "false",
+        "x": 2170,
+        "y": 1840,
+        "wires": []
+    },
+    {
+        "id": "593852f0fc20e3c2",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "PIR ON 논리",
+        "func": "// Function: PIR ON 논리 (단순 제어)\n\nconst pirStatus = msg.payload.d.pir_status;\n\n// 출력 1: OPEN 명령 (Door Command 노드로 연결)\n// 출력 2: CLOSE 명령 트리거 (delay 5s 노드로 연결)\n\n// --- PIR ON 시 문 열림 및 타이머 시작 ---\nif (pirStatus === 'on') {\n\n    // 1. OPEN 명령 생성 (출력 1)\n    const open_command = {\n        ...msg,\n        payload: { \"d\": { \"door\": \"open\" } }\n    };\n\n    // 2. 5초 딜레이 타이머를 시작/재시작하는 명령 (출력 2)\n    const start_timer_cmd = {\n        payload: 'CLOSE_TRIGGER'\n    };\n\n    // OPEN 명령과 닫힘 타이머 시작 메시지를 동시에 전송\n    return [open_command, start_timer_cmd];\n}\n\n// --- PIR OFF 시 타이머 리셋 ---\n\n// 닫힘 타이머를 중지하는 'reset' 메시지 (출력 2)\nconst reset_timer_cmd = {\n    payload: \"reset\"\n};\n\n// 문을 여는 명령은 없으므로, 출력 1에는 null을 보내고, 출력 2에만 리셋 메시지를 보냅니다.\nreturn [null, reset_timer_cmd];",
+        "outputs": 2,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1750,
+        "y": 1840,
+        "wires": [
+            [
+                "74ceea14527ce0d3",
+                "2f1af8e4a71f9f05"
+            ],
+            [
+                "4858791a5cd349d6"
+            ]
+        ]
+    },
+    {
+        "id": "44b8ce2c9ddbe938",
+        "type": "function",
+        "z": "07df95160324a9c0",
+        "name": "Map to CLOSE Command",
+        "func": "// Function: Map to CLOSE Command\n\nif (msg.payload === 'CLOSE_TRIGGER') {\n    // 딜레이가 끝난 후 CLOSE 명령 생성\n    return {\n        payload: { \"d\": { \"door\": \"close\" } }\n    };\n}\nreturn null;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1950,
+        "y": 1920,
+        "wires": [
+            [
+                "2f1af8e4a71f9f05"
+            ]
+        ]
+    },
+    {
+        "id": "4858791a5cd349d6",
+        "type": "delay",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "pauseType": "delay",
+        "timeout": "5",
+        "timeoutUnits": "seconds",
+        "rate": "1",
+        "nbRateUnits": "1",
+        "rateUnits": "second",
+        "randomFirst": "1",
+        "randomLast": "5",
+        "randomUnits": "seconds",
+        "drop": false,
+        "allowrate": false,
+        "outputs": 1,
+        "x": 1740,
+        "y": 1920,
+        "wires": [
+            [
+                "44b8ce2c9ddbe938"
+            ]
+        ]
+    },
+    {
+        "id": "7d1b8bab0cf3ae21",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 19",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1720,
+        "y": 2000,
+        "wires": []
+    },
+    {
+        "id": "40fcb4d49ecb1b56",
+        "type": "gate",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "controlTopic": "control",
+        "defaultState": "closed",
+        "openCmd": "open",
+        "closeCmd": "close",
+        "toggleCmd": "toggle",
+        "defaultCmd": "default",
+        "statusCmd": "status",
+        "persist": false,
+        "storeName": "memory",
+        "x": 510,
+        "y": 2060,
+        "wires": [
+            [
+                "1692c18f2f1fcddf"
+            ]
+        ]
+    },
+    {
+        "id": "55b350fb156d3854",
+        "type": "link in",
+        "z": "07df95160324a9c0",
+        "name": "link in 4",
+        "links": [
+            "da69c43e0ce61d24"
+        ],
+        "x": 325,
+        "y": 2000,
+        "wires": [
+            [
+                "40fcb4d49ecb1b56"
+            ]
+        ]
+    },
+    {
+        "id": "da69c43e0ce61d24",
+        "type": "link out",
+        "z": "07df95160324a9c0",
+        "name": "link out 5",
+        "mode": "link",
+        "links": [
+            "55b350fb156d3854"
+        ],
+        "x": 1545,
+        "y": 1700,
+        "wires": []
+    },
+    {
+        "id": "5ac51c58db462589",
+        "type": "ui-switch",
+        "z": "07df95160324a9c0",
+        "name": "",
+        "label": "switch",
+        "group": "2941f24518bb5ea0",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "decouple": false,
+        "topic": "topic",
+        "topicType": "msg",
+        "style": "",
+        "className": "",
+        "layout": "row-spread",
+        "clickableArea": "switch",
+        "onvalue": "true",
+        "onvalueType": "bool",
+        "onicon": "",
+        "oncolor": "",
+        "offvalue": "false",
+        "offvalueType": "bool",
+        "officon": "",
+        "offcolor": "",
+        "x": 630,
+        "y": 1960,
+        "wires": [
+            [
+                "095cb1c4df15bcf1"
+            ]
+        ]
+    },
+    {
+        "id": "74ceea14527ce0d3",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 4",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1920,
+        "y": 1780,
+        "wires": []
+    },
+    {
+        "id": "5bb4a127099204ad",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 5",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 1300,
+        "wires": []
+    },
+    {
+        "id": "f97c7d2d88c0de93",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 6",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 1880,
+        "wires": []
+    },
+    {
+        "id": "6e6d3300e3879a71",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 7",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 440,
+        "y": 2160,
+        "wires": []
+    },
+    {
+        "id": "59cff3a9839dbee6",
+        "type": "io7 out",
+        "z": "07df95160324a9c0",
+        "authentication": "5ed8a00fe0ba96d0",
+        "name": "",
+        "deviceId": "SERVO1",
+        "cmd": "SERVO1",
+        "fmt": "json",
+        "qos": "0",
+        "retain": "false",
+        "x": 1260,
+        "y": 1040,
+        "wires": []
+    },
+    {
+        "id": "ea105f68c6134a40",
+        "type": "debug",
+        "z": "07df95160324a9c0",
+        "name": "debug 8",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 320,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "5ed8a00fe0ba96d0",
+        "type": "io7-hub",
+        "name": "app518",
+        "host": "mqtt",
+        "useTLS": true,
+        "knownPort": true,
+        "port": "1883",
+        "tls": "",
+        "clientid": ""
+    },
+    {
+        "id": "d50a94dd912eaf71",
+        "type": "ui-group",
+        "name": "Heat,Cool Control",
+        "page": "ab3e6e7f8fa0fce9",
+        "width": 4,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "083b1f15b917ae21",
+        "type": "telegram bot",
+        "botname": "guitarpet3418_iot_bot",
+        "usernames": "",
+        "chatids": "",
+        "baseapiurl": "",
+        "testenvironment": false,
+        "updatemode": "polling",
+        "pollinterval": 300,
+        "usesocks": false,
+        "sockshost": "",
+        "socksprotocol": "socks5",
+        "socksport": 6667,
+        "socksusername": "anonymous",
+        "sockspassword": "",
+        "bothost": "",
+        "botpath": "",
+        "localbothost": "0.0.0.0",
+        "localbotport": 8443,
+        "publicbotport": 8443,
+        "privatekey": "",
+        "certificate": "",
+        "useselfsignedcertificate": false,
+        "sslterminated": false,
+        "verboselogging": false
+    },
+    {
+        "id": "2941f24518bb5ea0",
+        "type": "ui-group",
+        "name": "neo control",
+        "page": "ab3e6e7f8fa0fce9",
+        "width": 6,
+        "height": 1,
+        "order": -1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "ab3e6e7f8fa0fce9",
+        "type": "ui-page",
+        "name": "Page1",
+        "ui": "bb927088a507384d",
+        "path": "/page1",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "ad561afcf5f65648",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": -1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "bb927088a507384d",
+        "type": "ui-base",
+        "name": "UI Name",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": true
+    },
+    {
+        "id": "ad561afcf5f65648",
+        "type": "ui-theme",
+        "name": "Theme Name",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0094ce",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "fe3f8d4a63aa70b5",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-contrib-io7": "0.1.8",
+            "@flowfuse/node-red-dashboard": "1.29.0",
+            "node-red-contrib-simple-gate": "0.5.2",
+            "node-red-contrib-telegrambot": "17.0.3",
+            "@marek-knappe/node-red-google-calendar": "3.1.2"
+        }
+    }
+]
